@@ -1,0 +1,6 @@
+/node_modules
+/data/token.txt
+/data/messagesToken.txt
+/data/appId.txt
+/data/clients.txt
+/data/modes.json
