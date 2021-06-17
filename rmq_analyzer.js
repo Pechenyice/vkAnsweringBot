@@ -19,7 +19,6 @@ let rmqKey = 'data.instructions';
 let clients = [172576383, 370711978];
 let chats = [];
 let modes = [];
-let user = [];
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
@@ -90,7 +89,7 @@ function local_analyzeNewUpdate(item) {
                                     let sys = item[5].split(' ')[0] == '!Бот' || item[5].split(' ')[0] == '!бот';
                                     let self = (item[2] & 2);
                                     let bot = self && !(item[2] & 16);
-                                    if (sys || (((modes[item[3]] && modes[item[3]]['tts'] && !self) || (user['tts'] && self)) && !sys)) {
+                                    if (sys || (((modes[item[3]] && modes[item[3]]['tts'] && !self)) && !sys)) {
                                         if (sys) {
                                             item[5] = item[5].split(' ');
                                             item[5].splice(0, 1);

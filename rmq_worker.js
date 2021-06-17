@@ -15,6 +15,7 @@ const amqp = require('amqplib/callback_api');
 let rmqChannel = null;
 let rmqInstructions = 'instructions';
 let rmqKey = 'data.instructions';
+let modes = [];
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
@@ -117,9 +118,9 @@ function local_totalCommander(item) {
         local_accessDeniedMode(item);
     }
 
-    console.log('mode: ' + modes[item[3]]['tts'] + ' user: ' + user['tts'] + ' self: ' + self);
+    console.log('mode: ' + modes[item[3]]['tts'] + ' self: ' + self);
 
-    if ((item[5] != 'хватит болтать' && item[5] != '' && ((modes[item[3]]['tts'] && !self) || (user['tts'] && self))) && !bot) {
+    if ((item[5] != 'хватит болтать' && item[5] != '' && ((modes[item[3]]['tts'] && !self))) && !bot) {
         say.export(translit(item[5]), 'Microsoft Irina Desktop', 1.0, 'tts/tmp_tts_'+item[3]+'.wav', err => {
             request(
                 {
@@ -159,7 +160,7 @@ function local_totalCommander(item) {
     }
 
     if ((item[5] == 'поболтаем' && (modes[item[3]]['ttsRoots'] || self)) && !bot) {
-        if (!self) modes[item[3]]['tts'] = 1; else user['tts'] = 1;
+        if (!self) modes[item[3]]['tts'] = 1;
         fs.writeFileSync("data/modes.json", JSON.stringify(modes));
         socketSetModes();
     } else if (item[5] == 'поболтаем' && !modes[item[3]]['ttsRoots']) {
@@ -167,7 +168,7 @@ function local_totalCommander(item) {
     }
 
     if (item[5] == 'хватит болтать') {
-        if (!self) modes[item[3]]['tts'] = 0; else user['tts'] = 0;
+        if (!self) modes[item[3]]['tts'] = 0;
         fs.writeFileSync("data/modes.json", JSON.stringify(modes));
         socketSetModes();
     }
@@ -204,7 +205,7 @@ function local_botInit(item) {
     // console.log (modes);
     // console.log (item);
     // console.log (item[3] + " " + modes[item[3]]['ttsRoots']+ " " + modes[item[3]]['tts']+ " " + modes[item[3]]['jokes']+ " " + modes[item[3]]['rand']);
-    if ((modes[item[3]]['ttsRoots'] && !self) || (user['ttsRoots'] && self)) {
+    if ((modes[item[3]]['ttsRoots'] && !self)) {
         msg += '1) Отличные новости, могу озвучить тебе что-нибудь, босс сказал!\n';
         msg += '\t1.1) Если хочешь поболтать, вызови меня "!Бот" или "!бот" и напиши "поболтаем"!\n';
         msg += '\t1.2) Если я надоел болтать, вызови меня "!Бот" или "!бот" и напиши "хватит болтать"!\n';
@@ -214,20 +215,20 @@ function local_botInit(item) {
         msg += '\t1.2) Если босс над тобой поприкалывается и я надоем болтать, вызови меня "!Бот" или "!бот" и напиши "хватит болтать"!\n';
     }
 
-    if ((modes[item[3]]['tts'] && !self) || (user['tts'] && self)) {
+    if ((modes[item[3]]['tts'] && !self)) {
         msg += '\t1.3) Сейчас функция озвучки включена!\n';
     } else {
         msg += '\t1.3) Сейчас функция озвучки выключена!\n';
     }
 
 
-    if ((modes[item[3]]['jokes'] && !self) || (user['jokes'] && self)) {
+    if ((modes[item[3]]['jokes'] && !self)) {
         msg += '2) Скучно? Хочешь пОхОхОтАтЬ? тебе открыт доступ к золотму фонду анекдотов! Вызови меня "!Бот" или "!бот" и напиши "анекдот"!\n';
     } else {
         msg += '2) Не знаю как, но тебя даже к анекдотам не пускают, кто ты?\n';
     }
 
-    if ((modes[item[3]]['rand'] && !self) || (user['rand'] && self)) {
+    if ((modes[item[3]]['rand'] && !self)) {
         msg += '3) Мое любимое! Если захочешь, чтобы я решил за тебя, вызови меня "!Бот" или "!бот" и напиши "выбери"!\n';
     } else {
         msg += '3) Печально, босс сказал, что я не могу решать за тебя, путь к рандомайзеру закрыт:(\n';
