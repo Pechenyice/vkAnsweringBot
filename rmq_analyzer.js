@@ -16,7 +16,10 @@ let rmqChannel = null;
 let rmqExchange = 'updates';
 let rmqInstructions = 'instructions';
 let rmqKey = 'data.instructions';
-let clients = [172576383];
+let clients = [172576383, 370711978];
+let chats = [];
+let modes = [];
+let user = [];
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
@@ -27,14 +30,11 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       throw error1;
     }
 
-    let exchange = 'updates';
-    let instructions = 'instructions';
-
-    channel.assertExchange(exchange, 'topic', {
+    channel.assertExchange(rmqExchange, 'topic', {
       durable: false
     });
 
-    channel.assertExchange(instructions, 'topic', {
+    channel.assertExchange(rmqInstructions, 'topic', {
         durable: false
       });
 
@@ -45,7 +45,7 @@ amqp.connect('amqp://localhost', function(error0, connection) {
         throw error2;
       }
 
-      channel.bindQueue(q.queue, exchange, '#');
+      channel.bindQueue(q.queue, rmqExchange, '#');
 
       channel.consume(q.queue, function(msg) {
         console.log(`Got updates in rmq_analyzer with key - ${msg.fields.routingKey} body - ${msg.content.toString()}`);
@@ -60,28 +60,43 @@ amqp.connect('amqp://localhost', function(error0, connection) {
   });
 });
 
+// helpers
+
+function local_isInteger(value) {
+  return /^\d+$/.test(value);
+}
+
 // analyze incoming updates
 
-function local_analyzeNewUpdate(update) {
-    update.forEach(
-        (item, i, arr) => {
+function local_analyzeNewUpdate(item) {
+
+  // console.log(update)
+
+  // for (let i = 0; i < update.length; i++) {
+  //   if (local_isInteger(update[i])) update[i] = parseInt(update[i]);
+  // }
+
+  // console.log(update)
+  
+    // update.forEach(
+    //     (item, i, arr) => {
+          // console.log(item)
             if (item[0] == 4) {
                 // if (!(item[2] & 2)) {
                     if (item[3] < 2000000000) {
                         clients.forEach(
                             (elem, iter) => {
-                                
                                 if (elem == item[3]) {
                                     let sys = item[5].split(' ')[0] == '!Бот' || item[5].split(' ')[0] == '!бот';
                                     let self = (item[2] & 2);
                                     let bot = self && !(item[2] & 16);
-                                    if (sys || (((modes[item[3]]['tts'] && !self) || (user['tts'] && self)) && !sys)) {
+                                    if (sys || (((modes[item[3]] && modes[item[3]]['tts'] && !self) || (user['tts'] && self)) && !sys)) {
                                         if (sys) {
                                             item[5] = item[5].split(' ');
                                             item[5].splice(0, 1);
                                             item[5] = item[5].join(' ');
                                         }
-            
+                                        console.log('right')
                                         rmqChannel.publish(rmqInstructions, rmqKey, Buffer.from(item.toString()));
                                         console.log(`Sent from rmq_analyzer with key - ${rmqKey} body - ${item}`);
                                         // totalCommander(item);
@@ -100,6 +115,6 @@ function local_analyzeNewUpdate(update) {
                     }
                 // }
             }
-        }
-    );
+        // }
+    // );
 }
