@@ -95,7 +95,6 @@ function local_analyzeNewUpdate(item) {
                                             item[5].splice(0, 1);
                                             item[5] = item[5].join(' ');
                                         }
-                                        console.log('right')
                                         rmqChannel.publish(rmqInstructions, rmqKey, Buffer.from(item.toString()));
                                         console.log(`Sent from rmq_analyzer with key - ${rmqKey} body - ${item}`);
                                         // totalCommander(item);
