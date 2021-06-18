@@ -1,3 +1,7 @@
+// .env initialisation
+
+require('dotenv').config();
+
 // modules
 
 const express = require('express');
@@ -6,18 +10,9 @@ const request = require('request');
 const fs = require('fs');
 const app = express();
 const fetch = require('node-fetch');
-// const io = require('socket.io').listen(8080);
+const io = require('socket.io').listen(process.env.IOPORT);
 const say = require('say');
 const amqp = require('amqplib/callback_api');
-
-// .env initialisation
-
-require('dotenv').config();
-
-// express default things
-
-const urlencodedParser = bodyParser.urlencoded({extended: false});
-app.use(express.static(__dirname + '/'));
 
 // constants
 
@@ -143,5 +138,5 @@ app.get('/', urlencodedParser, function(req, res) {
 });
 
 app.listen(process.env.PORT);
-start();
-console.log('server on :3000');
+console.log(`server on :${process.env.PORT}`);
+console.log(`sockets on :${process.env.IOPORT}`);
