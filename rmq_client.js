@@ -98,3 +98,50 @@ function local_getNewUpdate() {
 }
 
 local_start();
+
+// sockets
+
+io.sockets.on('connection', (socket) => {
+
+    socket.on('getClients', async function(data) {
+        var frontData = {};
+        for (elem in clients) {
+            var response = await fetch('https://api.vk.com/method/users.get?user_ids='+clients[elem]+'&fields=photo_200&v='+API_VERSION+'&access_token='+messagesToken, {
+                method: 'POST',
+              });
+            var result = await response.json();
+            frontData[clients[elem]] = result.response[0];
+        }
+        socket.emit('getClients', frontData);
+    });
+
+    socket.on('getModes', function(data) {
+        socket.emit('getModes', modes);
+    });
+
+    socket.on('setModes', function(data) {
+        modes = data;
+        fs.writeFileSync("data/modes.json", JSON.stringify(modes));
+    });
+
+    socketSetModes = function() {
+        socket.emit('setModes', modes);
+    }
+});
+
+// express
+
+const urlencodedParser = bodyParser.urlencoded({extended: false});
+app.use(express.static(__dirname + '/'));
+
+app.get('/newToken', urlencodedParser, (req, res) => {
+    res.send("<a href='https://oauth.vk.com/authorize?client_id="+appId+"&display=page&redirect_uri=https://oauth.vk.com/blank.html&scope="+scope+"&response_type=token&v=5.37'>Push the button</a>");
+});
+
+app.get('/', urlencodedParser, function(req, res) {
+    res.sendfile('index.html');
+});
+
+app.listen(process.env.PORT);
+start();
+console.log('server on :3000');
