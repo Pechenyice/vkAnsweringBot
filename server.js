@@ -60,9 +60,10 @@ let server = {
                 socket.emit('getModes', modes);
             });
         
-            socket.on('setModes', function(data) {
+            socket.on('setModes', async function(data) {
                 modes = data;
-                fs.writeFileSync("data/modes.json", JSON.stringify(modes));
+                console.log(modes)
+                await mongooseUtils.setClientsModes(modes);
             });
         
             socketSetModes = function(modes) {
