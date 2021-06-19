@@ -8,6 +8,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const app = express();
 let io = require('socket.io');
+const fetch = require('node-fetch');
 
 // constants
 
@@ -17,6 +18,20 @@ const MESSAGES_TOKEN = process.env.MESSAGES_TOKEN;
 // variables
 
 let clients = [];
+let modes = [];
+
+// mongoose
+
+const mongooseUtils = require('./modules/mongooseUtils.js');
+
+(async () => {
+    mongooseUtils.startSession();
+  
+    clients = await mongooseUtils.getClientsIds();
+    modes = await mongooseUtils.getClientsModes();
+    
+    console.log('server is ready for work!');
+  })();
 
 // export target
 
