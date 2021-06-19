@@ -17,6 +17,20 @@ let rmqInstructions = 'instructions';
 let rmqKey = 'data.instructions';
 let modes = [];
 
+// mongoose
+
+const mongooseUtils = require('./modules/mongooseUtils.js');
+
+(async () => {
+  mongooseUtils.startSession();
+
+  modes = await mongooseUtils.getClientsModes();
+  
+  console.log('Worker is ready for work!');
+})();
+
+// rabbit mq
+
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
     throw error0;
@@ -160,7 +174,7 @@ function local_totalCommander(item) {
     }
 
     if ((item[5] == 'поболтаем' && (modes[item[3]]['ttsRoots'] || self)) && !bot) {
-        if (!self) modes[item[3]]['tts'] = 1;
+        if (!self) modes[item[3]]['tts'] = true;
         fs.writeFileSync("data/modes.json", JSON.stringify(modes));
         socketSetModes();
     } else if (item[5] == 'поболтаем' && !modes[item[3]]['ttsRoots']) {
@@ -168,7 +182,7 @@ function local_totalCommander(item) {
     }
 
     if (item[5] == 'хватит болтать') {
-        if (!self) modes[item[3]]['tts'] = 0;
+        if (!self) modes[item[3]]['tts'] = false;
         fs.writeFileSync("data/modes.json", JSON.stringify(modes));
         socketSetModes();
     }

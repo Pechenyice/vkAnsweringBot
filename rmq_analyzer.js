@@ -16,9 +16,25 @@ let rmqChannel = null;
 let rmqExchange = 'updates';
 let rmqInstructions = 'instructions';
 let rmqKey = 'data.instructions';
-let clients = [172576383, 370711978];
+let clients = [];
 let chats = [];
 let modes = [];
+
+// mongoose
+
+const mongooseUtils = require('./modules/mongooseUtils.js');
+
+(async () => {
+  mongooseUtils.startSession();
+
+  clients = await mongooseUtils.getClientsIds();
+  modes = await mongooseUtils.getClientsModes();
+  
+  console.log('analyzer is ready for work!');
+})();
+
+
+// rabbit mq
 
 amqp.connect('amqp://localhost', function(error0, connection) {
   if (error0) {
