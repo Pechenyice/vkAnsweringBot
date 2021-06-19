@@ -10,6 +10,15 @@ const fetch = require('node-fetch');
 const say = require('say');
 const amqp = require('amqplib/callback_api');
 
+// .env initialisation
+
+require('dotenv').config();
+
+// constants
+
+const API_VERSION = process.env.API_VERSION || '5.131';
+const MESSAGES_TOKEN = process.env.MESSAGES_TOKEN;
+
 // variables
 
 let rmqChannel = null;
@@ -98,7 +107,7 @@ function local_totalCommander(item) {
         }
         request(
             {
-                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=' + choiceMessage + '&v='+API_VERSION+'&access_token='+messagesToken),
+                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=' + choiceMessage + '&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                 method: 'POST'
             }, (error, res) => {
 
@@ -111,14 +120,14 @@ function local_totalCommander(item) {
     if ((item[5] == 'анекдот' && ((modes[item[3]]['jokes'] && !self) || self)) && !bot) {
         request(
             {
-                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Бот Антон услышал, бот Антон на месте!&v='+API_VERSION+'&access_token='+messagesToken),
+                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Бот Антон услышал, бот Антон на месте!&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                 method: 'POST'
             }, (error, res) => {
                 var ind = Math.floor(Math.random() * Math.floor(jokes.length - 1));
                 setTimeout(()=> {
                     request(
                         {
-                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=ТАК, СРАЗУ ПРЕДУПРЕЖДАЮ, СМЕЯТЬСЯ НЕ ОБЯЗАТЕЛЬНО, ВОТ ЭТО ВАШЕ МНЕНИЕ ПО КЛАССИКЕ ЮМОРА КОНЕЧНО, ДА...\nНомер анекдота: ' + (ind+1) + ' из ' + jokes.length + '\n\n' + jokes[ind] + '&v='+API_VERSION+'&access_token='+messagesToken),
+                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=ТАК, СРАЗУ ПРЕДУПРЕЖДАЮ, СМЕЯТЬСЯ НЕ ОБЯЗАТЕЛЬНО, ВОТ ЭТО ВАШЕ МНЕНИЕ ПО КЛАССИКЕ ЮМОРА КОНЕЧНО, ДА...\nНомер анекдота: ' + (ind+1) + ' из ' + jokes.length + '\n\n' + jokes[ind] + '&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                             method: 'POST'
                         }, (error, res) => {
                             // console.log(error);
@@ -138,7 +147,7 @@ function local_totalCommander(item) {
         say.export(translit(item[5]), 'Microsoft Irina Desktop', 1.0, 'tts/tmp_tts_'+item[3]+'.wav', err => {
             request(
                 {
-                    uri: encodeURI('https://api.vk.com/method/docs.getMessagesUploadServer?type=audio_message&peer_id=172576383&v='+API_VERSION+'&access_token='+messagesToken),
+                    uri: encodeURI('https://api.vk.com/method/docs.getMessagesUploadServer?type=audio_message&peer_id=172576383&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                     method: 'POST'
                 }, (error, res) => {
                     var url = JSON.parse(res.body)['response']['upload_url'];
@@ -149,7 +158,7 @@ function local_totalCommander(item) {
                         res = JSON.parse(res)['file'];
                         request(
                             {
-                                uri: encodeURI('https://api.vk.com/method/docs.save?file='+res+'&title='+'tmp_tts_'+item[3]+'&tags=bot&v='+API_VERSION+'&access_token='+messagesToken),
+                                uri: encodeURI('https://api.vk.com/method/docs.save?file='+res+'&title='+'tmp_tts_'+item[3]+'&tags=bot&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                                 method: 'POST'
                             }, (error, res) => {
                                 // console.log(error);
@@ -157,7 +166,7 @@ function local_totalCommander(item) {
                                     res = JSON.parse(res.body)['response']['audio_message'];
                                     request(
                                         {
-                                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=&attachment=doc'+res['owner_id']+'_'+res['id']+'&v='+API_VERSION+'&access_token='+messagesToken),
+                                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=&attachment=doc'+res['owner_id']+'_'+res['id']+'&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                                             method: 'POST'
                                         }, (error, res) => {
                                             // console.log(error);
@@ -197,7 +206,7 @@ function local_totalCommander(item) {
 function local_accessDeniedMode(item) {
     request(
         {
-            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Извините, у вас нет прав на использование этой функции!&v='+API_VERSION+'&access_token='+messagesToken),
+            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Извините, у вас нет прав на использование этой функции!&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
             method: 'POST'
         }, (error, res) => {
             // console.log(error);
@@ -251,7 +260,7 @@ function local_botInit(item) {
     if (!bot) {
         request(
             {
-                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=' + msg + '&v='+API_VERSION+'&access_token='+messagesToken),
+                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=' + msg + '&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                 method: 'POST'
             }, (error, res) => {
                 // console.log(error);
@@ -259,4 +268,11 @@ function local_botInit(item) {
             }
         );
     }
+}
+
+// utils
+
+function getRandomInt(max) {
+    // console.log(Math.floor(Math.random() * Math.floor(2147483647)));
+    return Math.floor(Math.random() * Math.floor(max || 2147483647));
 }
