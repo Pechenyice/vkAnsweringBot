@@ -60,10 +60,10 @@ let mongooseUtils = {
     },
 
     /**
-     * get all clients vk ids from collection.
+     * get all clients modes.
      * @returns {Object[]}
      */
-     getClientsModes: async function() {
+    getClientsModes: async function() {
         let ids = {};
         await this.client.find({}, function(err, clients){        
             if(err) return console.log(err);
@@ -77,6 +77,20 @@ let mongooseUtils = {
             }
         });
         return ids;
+    },
+
+     /**
+     * @param {Object} modes - New modes.
+     * set all clients modes.
+     */
+    setClientsModes: async function(modes) {
+      
+        for (const [key, value] of Object.entries(modes)) {
+            await this.client.updateOne({id: key}, {ttsRoots: value.ttsRoots, tts: value.tts, jokes: value.jokes, rand: value.rand}, function(err, result){
+                if(err) return console.log(err);
+            });
+        }
+
     }
 
 }
