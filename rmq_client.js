@@ -24,6 +24,8 @@ const MESSAGES_TOKEN = process.env.MESSAGES_TOKEN;
 
 let longPoll = null;
 let rmqChannel = null;
+let rmqSockets = 'socketsUpdate';
+let rmqSocketKey = 'sockets.update';
 let rmqExchange = 'updates';
 let rmqKey = 'data.updates';
 
@@ -43,11 +45,33 @@ function local_start() {
                 throw error1;
             }
 
+            channel.assertExchange(rmqSockets, 'topic', {
+                durable: false
+            });
+
             channel.assertExchange(rmqExchange, 'topic', {
                 durable: false
             });
 
-            rmqChannel = channel;
+            channel.assertQueue('', {
+                exclusive: true
+              }, function(error2, q) {
+                if (error2) {
+                  throw error2;
+                }
+          
+                channel.bindQueue(q.queue, rmqSockets, '#');
+          
+                channel.consume(q.queue, function(msg) {
+                  console.log('server sockets updates: ' + msg.content.toString());
+                  server.socketSetModes(JSON.parse(msg.content.toString()));
+                }, {
+                  noAck: true
+                });
+          
+                rmqChannel = channel;
+          
+            });
 
         });
 

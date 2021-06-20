@@ -22,6 +22,8 @@ const MESSAGES_TOKEN = process.env.MESSAGES_TOKEN;
 // variables
 
 let rmqChannel = null;
+let rmqSockets = 'socketsUpdate';
+let rmqSocketKey = 'sockets.update';
 let rmqInstructions = 'instructions';
 let rmqKey = 'data.instructions';
 let modes = [];
@@ -52,9 +54,13 @@ amqp.connect('amqp://localhost', function(error0, connection) {
       throw error1;
     }
 
+    channel.assertExchange(rmqSockets, 'topic', {
+        durable: false
+    });
+
     channel.assertExchange(rmqInstructions, 'topic', {
         durable: false
-      });
+    });
 
     channel.assertQueue('', {
       exclusive: true
@@ -152,7 +158,7 @@ function local_totalCommander(item) {
 
     console.log('mode: ' + modes[item[3]]['tts'] + ' self: ' + self);
 
-    if ((item[5] != 'хватит болтать' && item[5] != '' && ((modes[item[3]]['tts'] && !self))) && !bot) {
+    if ((item[5] != 'хватит болтать' && item[5] != '' && item[5] != 'поболтаем' && ((modes[item[3]]['tts'] && !self))) && !bot) {
         say.export(translit(item[5]), 'Microsoft Irina Desktop', 1.0, 'tts/tmp_tts_'+item[3]+'.wav', err => {
             request(
                 {
@@ -194,7 +200,7 @@ function local_totalCommander(item) {
     if ((item[5] == 'поболтаем' && (modes[item[3]]['ttsRoots'] || self)) && !bot) {
         if (!self) modes[item[3]]['tts'] = true;
         mongooseUtils.setClientsModes(modes);
-        // socketSetModes();
+        rmqChannel.publish(rmqSockets, rmqSocketKey, Buffer.from(JSON.stringify(modes).toString()));
     } else if (item[5] == 'поболтаем' && !modes[item[3]]['ttsRoots']) {
         local_accessDeniedMode(item);
     }
@@ -202,7 +208,7 @@ function local_totalCommander(item) {
     if (item[5] == 'хватит болтать') {
         if (!self) modes[item[3]]['tts'] = false;
         mongooseUtils.setClientsModes(modes);
-        // socketSetModes();
+        rmqChannel.publish(rmqSockets, rmqSocketKey, Buffer.from(JSON.stringify(modes).toString()));
     }
 
     // if (item[5] == 'хватит') {
