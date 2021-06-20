@@ -56,7 +56,8 @@ let server = {
                 socket.emit('getClients', frontData);
             });
         
-            socket.on('getModes', function(data) {
+            socket.on('getModes', async function(data) {
+                modes = await mongooseUtils.getClientsModes();
                 socket.emit('getModes', modes);
             });
         
