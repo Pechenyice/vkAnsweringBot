@@ -66,7 +66,7 @@ let server = {
                 await mongooseUtils.setClientsModes(modes);
             });
         
-            socketSetModes = function(modes) {
+            this.socketSetModes = function(modes) {
                 socket.emit('setModes', modes);
             }
         });
@@ -87,7 +87,9 @@ let server = {
         app.listen(process.env.PORT);
         console.log(`server on :${process.env.PORT}`);
         console.log(`sockets on :${process.env.IOPORT}`);
-    }
+    },
+
+    socketSetModes: null
 }
 
 
