@@ -6,6 +6,8 @@ require('dotenv').config();
 let mongooseUtils = {
     clientSchema: null,
     client: null,
+    jokeSchema: null,
+    joke: null,
 
     /**
      * start mongo db session.
@@ -14,6 +16,9 @@ let mongooseUtils = {
 
         this.clientSchema = new Schema({id: Number, ttsRoots: Boolean, tts: Boolean, jokes: Boolean, rand: Boolean});
         this.client = mongoose.model("client", this.clientSchema);
+
+        this.jokeSchema = new Schema({content: String});
+        this.joke = mongoose.model("joke", this.jokeSchema);
 
         mongoose.connect(process.env.MONGODBURI, { useUnifiedTopology: true, useNewUrlParser: true, useFindAndModify: false }, function(err){
             if(err) return console.log(err);
@@ -38,10 +43,20 @@ let mongooseUtils = {
      */
     saveClient: function(user) {
         let client = new this.client(user);
-        client.save(function(err){
+
+        this.client.find({id: user.id}, function(err, clients){        
             if(err) return console.log(err);
-            console.log("saved: " + client)
+            if (clients.length) {
+                console.log("client already exists!");
+                return;
+            }
+
+            client.save(function(err){
+                if(err) return console.log(err);
+                console.log("saved: " + client)
+            });
         });
+
     },
 
     /**
@@ -90,6 +105,46 @@ let mongooseUtils = {
                 if(err) return console.log(err);
             });
         }
+
+    },
+
+    /**
+     * save joke to collection.
+     * @param {Object} joke - New joke.
+     * @param {String} joke.content - joke content.
+     */
+     saveJoke: function(j) {
+        let joke = new this.joke(j);
+
+        this.joke.find({content: j.content}, function(err, jo){        
+            if(err) return console.log(err);
+            if (jo.length) {
+                console.log("joke already exists!");
+                return;
+            }
+
+            joke.save(function(err){
+                if(err) return console.log(err);
+                console.log("saved: " + joke)
+            });
+        });
+
+    },
+
+    /**
+     * get all jokes.
+     * @returns {String[]}
+     */
+     getJokes: async function() {
+      
+        let jokes = [];
+        await this.joke.find({}, function(err, res){        
+            if(err) return console.log(err);
+            for (let r of res) {
+                jokes.push(r.content);
+            }
+        });
+        return jokes;
 
     }
 
