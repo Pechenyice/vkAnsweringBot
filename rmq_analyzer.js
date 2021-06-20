@@ -51,7 +51,7 @@ amqp.connect('amqp://localhost', function(error0, connection) {
 
     channel.assertExchange(rmqInstructions, 'topic', {
         durable: false
-      });
+    });
 
     channel.assertQueue('', {
       exclusive: true
