@@ -25,6 +25,7 @@ let rmqChannel = null;
 let rmqInstructions = 'instructions';
 let rmqKey = 'data.instructions';
 let modes = [];
+let jokes = [];
 
 // mongoose
 
@@ -34,6 +35,8 @@ const mongooseUtils = require('./modules/mongooseUtils.js');
   mongooseUtils.startSession();
 
   modes = await mongooseUtils.getClientsModes();
+
+  jokes = await mongooseUtils.getJokes();
   
   console.log('Worker is ready for work!');
 })();
