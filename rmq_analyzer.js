@@ -85,6 +85,12 @@ function local_isInteger(value) {
 
 function local_analyzeNewUpdate(item) {
 
+  (async () => {
+    modes = await mongooseUtils.getClientsModes();
+    
+    console.log('modes: ' + modes);
+  })();
+
   // console.log(update)
 
   // for (let i = 0; i < update.length; i++) {

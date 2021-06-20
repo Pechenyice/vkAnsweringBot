@@ -36,7 +36,7 @@ const mongooseUtils = require('./modules/mongooseUtils.js');
 
   modes = await mongooseUtils.getClientsModes();
 
-  jokes = await mongooseUtils.getJokes();
+  jokes = await mongooseUtils.getJokes();  
   
   console.log('Worker is ready for work!');
 })();
@@ -82,6 +82,12 @@ amqp.connect('amqp://localhost', function(error0, connection) {
 // analyze incoming updates
 
 function local_totalCommander(item) {
+
+    (async () => {
+        modes = await mongooseUtils.getClientsModes();
+        
+        console.log('modes: ' + modes);
+      })();
 
     // флаг 16 - проверка на сообщение из чата, скоро станет deprecated, если что-то
     // сломалось, стоит проверить здесь в перувую очередь 
@@ -187,16 +193,16 @@ function local_totalCommander(item) {
 
     if ((item[5] == 'поболтаем' && (modes[item[3]]['ttsRoots'] || self)) && !bot) {
         if (!self) modes[item[3]]['tts'] = true;
-        fs.writeFileSync("data/modes.json", JSON.stringify(modes));
-        socketSetModes();
+        mongooseUtils.setClientsModes(modes);
+        // socketSetModes();
     } else if (item[5] == 'поболтаем' && !modes[item[3]]['ttsRoots']) {
         local_accessDeniedMode(item);
     }
 
     if (item[5] == 'хватит болтать') {
         if (!self) modes[item[3]]['tts'] = false;
-        fs.writeFileSync("data/modes.json", JSON.stringify(modes));
-        socketSetModes();
+        mongooseUtils.setClientsModes(modes);
+        // socketSetModes();
     }
 
     // if (item[5] == 'хватит') {
@@ -278,4 +284,26 @@ function local_botInit(item) {
 function getRandomInt(max) {
     // console.log(Math.floor(Math.random() * Math.floor(2147483647)));
     return Math.floor(Math.random() * Math.floor(max || 2147483647));
+}
+
+let translitContent = {
+    'rus': " щ   ш  ч  ц  ю  я  ё  ж  ъ  ы  э  а б в г д е з и й к л м н о п р с т у ф х ь".split(/ +/g),
+    'en': " shh sh ch cz yu ya yo zh `` y' e a b v g de e z i j k l m n o p r s t u f h `".split(/ +/g)
+}
+
+function translit(text) {
+    text = text.toLowerCase();
+    // translitContent['rus'].push(' ');
+    // translitContent['en'].push(' ');
+    var translited = "";
+    for (var i = 0; i < text.length; i++) {
+        if (text[i] == ' ') {
+            translited += ' ';
+            continue;
+        }
+        for (elem in translitContent['rus']) {
+            if (translitContent['rus'][elem] == text[i]) translited += translitContent['en'][elem];
+        }
+    }
+    return translited;
 }
