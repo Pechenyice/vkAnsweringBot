@@ -14,7 +14,7 @@ let mongooseUtils = {
      */
     startSession: function() {
 
-        this.clientSchema = new Schema({id: Number, ttsRoots: Boolean, tts: Boolean, jokes: Boolean, rand: Boolean});
+        this.clientSchema = new Schema({id: Number, ttsRoots: Boolean, tts: Boolean, jokes: Boolean, rand: Boolean, chat: Boolean});
         this.client = mongoose.model("client", this.clientSchema);
 
         this.jokeSchema = new Schema({content: String});
@@ -40,6 +40,7 @@ let mongooseUtils = {
      * @param {Boolean} user.tts - user tts mode.
      * @param {Boolean} user.jokes - user jokes access.
      * @param {Boolean} user.rand - user rand access.
+     * @param {Boolean} user.chat - user chat access.
      */
     saveClient: function(user) {
         let client = new this.client(user);
@@ -88,6 +89,7 @@ let mongooseUtils = {
                     'tts': c.tts,
                     'jokes': c.jokes,
                     'rand': c.rand,
+                    'chat': c.chat,
                 };
             }
         });
