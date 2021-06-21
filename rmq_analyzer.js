@@ -108,7 +108,7 @@ function local_analyzeNewUpdate(item) {
                         clients.forEach(
                             (elem, iter) => {
                                 if (elem == item[3]) {
-                                    let sys = item[5].split(' ')[0] == '!Бот' || item[5].split(' ')[0] == '!бот';
+                                    let sys = item[5].split(' ')[0] == '/bot';
                                     let self = (item[2] & 2);
                                     let bot = self && !(item[2] & 16);
                                     if (sys || (((modes[item[3]] && modes[item[3]]['tts'] && !self)) && !sys)) {

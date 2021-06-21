@@ -9,6 +9,7 @@ const fetch = require('node-fetch');
 // const io = require('socket.io').listen(8080);
 const say = require('say');
 const amqp = require('amqplib/callback_api');
+const UserAgent = require('user-agents');
 
 // .env initialisation
 
@@ -18,6 +19,18 @@ require('dotenv').config();
 
 const API_VERSION = process.env.API_VERSION || '5.131';
 const MESSAGES_TOKEN = process.env.MESSAGES_TOKEN;
+
+// commands config
+
+const commands = {
+    // 'SILENT': '',
+    'HELP': 'help',
+    'RAND': 'choose',
+    'JOKE': 'joke',
+    'STOPTALK': 'stop talk',
+    'TALK': 'talk',
+    'CHAT': 'chat'
+};
 
 // variables
 
@@ -103,20 +116,22 @@ function local_totalCommander(item) {
     var bot = self && !(item[2] & 16);
     // console.log(bot);
 
-    if ((!item[5] || item[5] == 'что умеешь') && !bot) {
+    if ((
+        // item[5] == commands.SILENT || 
+        item[5] == commands.HELP) && !bot) {
         local_botInit(item);
     }
 
-    if ((item[5].split(' ')[0] == 'выбери' && ((modes[item[3]]['rand'] && !self) || self)) && !bot) {
+    if ((item[5].split(' ')[0] == commands.RAND && ((modes[item[3]]['rand'] && !self) || self)) && !bot) {
         var choice = getRandomInt(2);
-        var choiceMessage = 'Не могу определиться(';
+        var choiceMessage = 'Can\'t choose(';
         switch (choice) {
             case 0: {
-                choiceMessage = 'Скорее первое)';
+                choiceMessage = 'I think first)';
                 break;
             }
             case 1: {
-                choiceMessage = 'Наверно второе)';
+                choiceMessage = 'Maybe second)';
                 break;
             }
         }
@@ -128,21 +143,21 @@ function local_totalCommander(item) {
 
             }
         );
-    } else if (item[5] == 'выбери' && !modes[item[3]]['rand']) {
+    } else if (item[5] == commands.RAND && !modes[item[3]]['rand']) {
         local_accessDeniedMode(item);
     }
 
-    if ((item[5] == 'анекдот' && ((modes[item[3]]['jokes'] && !self) || self)) && !bot) {
+    if ((item[5] == commands.JOKE && ((modes[item[3]]['jokes'] && !self) || self)) && !bot) {
         request(
             {
-                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Бот Антон услышал, бот Антон на месте!&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
+                uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Anton is looking for cool joke!&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                 method: 'POST'
             }, (error, res) => {
                 var ind = Math.floor(Math.random() * Math.floor(jokes.length - 1));
                 setTimeout(()=> {
                     request(
                         {
-                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=ТАК, СРАЗУ ПРЕДУПРЕЖДАЮ, СМЕЯТЬСЯ НЕ ОБЯЗАТЕЛЬНО, ВОТ ЭТО ВАШЕ МНЕНИЕ ПО КЛАССИКЕ ЮМОРА КОНЕЧНО, ДА...\nНомер анекдота: ' + (ind+1) + ' из ' + jokes.length + '\n\n' + jokes[ind] + '&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
+                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Joke number: ' + (ind+1) + ' from ' + jokes.length + '\n\n' + jokes[ind] + '&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
                             method: 'POST'
                         }, (error, res) => {
                             // console.log(error);
@@ -152,13 +167,13 @@ function local_totalCommander(item) {
                 }, 300);
             }
         );
-    } else if (item[5] == 'анекдот' && !modes[item[3]]['jokes']) {
+    } else if (item[5] == commands.JOKE && !modes[item[3]]['jokes']) {
         local_accessDeniedMode(item);
     }
 
-    console.log('mode: ' + modes[item[3]]['tts'] + ' self: ' + self);
-
-    if ((item[5] != 'хватит болтать' && item[5] != '' && item[5] != 'поболтаем' && ((modes[item[3]]['tts'] && !self))) && !bot) {
+    if ((item[5] != commands.STOPTALK && 
+        // item[5] != commands.SILENT && 
+        item[5] != commands.TALK && !isCommandMessage(item[5]) && ((modes[item[3]]['tts'] && !self))) && !bot) {
         say.export(translit(item[5]), 'Microsoft Irina Desktop', 1.0, 'tts/tmp_tts_'+item[3]+'.wav', err => {
             request(
                 {
@@ -197,31 +212,95 @@ function local_totalCommander(item) {
         });
     }
 
-    if ((item[5] == 'поболтаем' && (modes[item[3]]['ttsRoots'] || self)) && !bot) {
+    if ((item[5] == commands.TALK && (modes[item[3]]['ttsRoots'] || self)) && !bot) {
         if (!self) modes[item[3]]['tts'] = true;
         mongooseUtils.setClientsModes(modes);
         rmqChannel.publish(rmqSockets, rmqSocketKey, Buffer.from(JSON.stringify(modes).toString()));
-    } else if (item[5] == 'поболтаем' && !modes[item[3]]['ttsRoots']) {
+    } else if (item[5] == commands.TALK && !modes[item[3]]['ttsRoots']) {
         local_accessDeniedMode(item);
     }
 
-    if (item[5] == 'хватит болтать') {
+    if ((item[5].split(' ')[0] == commands.CHAT && (modes[item[3]]['chat'] || self)) && !bot) {
+        let userAgent = new UserAgent();
+        console.log(userAgent.toString());
+
+
+        try {
+            (async () => {
+
+                request(
+                    {
+                        uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Let me think...&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
+                        method: 'POST'
+                    }, (error, res) => {
+                        // console.log(error);
+                        // console.log(res.body);
+                    }
+                );
+
+                let res = await fetch('https://api.aicloud.sbercloud.ru/public/v1/public_inference/gpt3/predict', {
+                    method: 'post',
+                    body: JSON.stringify({'text': item[5]}),
+                    headers: {
+                        'accept': 'application/json',
+                        'Content-Type': 'application/json',
+                        'User-Agent': userAgent.toString()
+                    },
+                });
+                res = await res.json();
+                
+                res = res.predictions;
+
+                try {
+                    request(
+                        {
+                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=My answer is: ' + res.slice(item[5].length).match(/[^\.\!\?]+[\.\!\?]+/g)[0] + '&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
+                            method: 'POST'
+                        }, (error, res) => {
+                            // console.log(error);
+                            // console.log(res.body);
+                        }
+                    );
+                } catch {
+                    console.log('Error during answering with gpt3!');
+                    request(
+                        {
+                            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=I can\'t answer :(&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
+                            method: 'POST'
+                        }, (error, res) => {
+                            // console.log(error);
+                            // console.log(res.body);
+                        }
+                    );
+                }
+            })();
+        } catch {
+            console.log('Error during answering with gpt3!');
+            request(
+                {
+                    uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=I can\'t answer :(&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
+                    method: 'POST'
+                }, (error, res) => {
+                    // console.log(error);
+                    // console.log(res.body);
+                }
+            );
+        }
+    } else if (item[5] == commands.CHAT && !modes[item[3]]['chat']) {
+        local_accessDeniedMode(item);
+    }
+
+    if (item[5] == commands.STOPTALK) {
         if (!self) modes[item[3]]['tts'] = false;
         mongooseUtils.setClientsModes(modes);
         rmqChannel.publish(rmqSockets, rmqSocketKey, Buffer.from(JSON.stringify(modes).toString()));
     }
-
-    // if (item[5] == 'хватит') {
-    //     modes[item[3]]['tts'] = 0;
-    //     fs.writeFileSync("data/modes.json", JSON.stringify(modes));
-    //     socketSetModes();
-    // }
 }
 
 function local_accessDeniedMode(item) {
     request(
         {
-            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Извините, у вас нет прав на использование этой функции!&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
+            uri: encodeURI('https://api.vk.com/method/messages.send?random_id='+getRandomInt()+'&peer_id='+item[3]+'&message=Sorry, this function is denied for you right now!&v='+API_VERSION+'&access_token='+MESSAGES_TOKEN),
             method: 'POST'
         }, (error, res) => {
             // console.log(error);
@@ -239,37 +318,33 @@ function local_botInit(item) {
     var self = (item[2] & 2);
     var bot = self && !(item[2] & 16);
 
-    var msg = 'Hey! Если что я Антон, сейчас расскажу что тебе можно:)\nНу смотри:\n\n'
-    // console.log (modes);
-    // console.log (item);
-    // console.log (item[3] + " " + modes[item[3]]['ttsRoots']+ " " + modes[item[3]]['tts']+ " " + modes[item[3]]['jokes']+ " " + modes[item[3]]['rand']);
+    var msg = 'Hey! I am Anton!\n\n\n'
+
+    msg += `/bot ${commands.HELP} - get help with bot\n\n`;
+
     if ((modes[item[3]]['ttsRoots'] && !self)) {
-        msg += '1) Отличные новости, могу озвучить тебе что-нибудь, босс сказал!\n';
-        msg += '\t1.1) Если хочешь поболтать, вызови меня "!Бот" или "!бот" и напиши "поболтаем"!\n';
-        msg += '\t1.2) Если я надоел болтать, вызови меня "!Бот" или "!бот" и напиши "хватит болтать"!\n';
-    } else {
-        msg += '1) Вот доступа к машинной озвучке у тебя нет, можешь попросить босса конечно, но помни что мне лень это делать!\n';
-        msg += '\t1.1) Если тебя все-же допустят и захочешь поболтать, вызови меня "!Бот" или "!бот" и напиши "поболтаем"!\n';
-        msg += '\t1.2) Если босс над тобой поприкалывается и я надоем болтать, вызови меня "!Бот" или "!бот" и напиши "хватит болтать"!\n';
+        msg += `/bot ${commands.TALK} - answering with audio messages\n`;
+        msg += `/bot ${commands.STOPTALK} - stop answering with audio messages\n`;
     }
 
     if ((modes[item[3]]['tts'] && !self)) {
-        msg += '\t1.3) Сейчас функция озвучки включена!\n';
+        msg += '[current state]: bot is talking\n\n';
     } else {
-        msg += '\t1.3) Сейчас функция озвучки выключена!\n';
+        msg += '[current state]: bot is silent\n\n';
     }
 
+    console.log(modes[item[3]])
 
     if ((modes[item[3]]['jokes'] && !self)) {
-        msg += '2) Скучно? Хочешь пОхОхОтАтЬ? тебе открыт доступ к золотму фонду анекдотов! Вызови меня "!Бот" или "!бот" и напиши "анекдот"!\n';
-    } else {
-        msg += '2) Не знаю как, но тебя даже к анекдотам не пускают, кто ты?\n';
+        msg += `/bot ${commands.JOKE} - send you an ugly (wonderful) joke\n\n`;
+    }
+
+    if ((modes[item[3]]['chat'] && !self)) {
+        msg += `/bot ${commands.CHAT} - chat with you (answering your message with gpt3)\n\n`;
     }
 
     if ((modes[item[3]]['rand'] && !self)) {
-        msg += '3) Мое любимое! Если захочешь, чтобы я решил за тебя, вызови меня "!Бот" или "!бот" и напиши "выбери"!\n';
-    } else {
-        msg += '3) Печально, босс сказал, что я не могу решать за тебя, путь к рандомайзеру закрыт:(\n';
+        msg += `/bot ${commands.RAND} - choice between two options\n\n`;
     }
 
     if (!bot) {
@@ -286,6 +361,18 @@ function local_botInit(item) {
 }
 
 // utils
+
+function isCommandMessage(text) {
+    // if (text == commands.SILENT) return true;
+    if (text == commands.HELP) return true;
+    if (text == commands.JOKE) return true;
+    if (text == commands.TALK) return true;
+    if (text == commands.STOPTALK) return true;
+    if (text.split(' ')[0] == commands.CHAT) return true;
+    if (text.split(' ')[0] == commands.RAND) return true;
+
+    return false;
+}
 
 function getRandomInt(max) {
     // console.log(Math.floor(Math.random() * Math.floor(2147483647)));

@@ -107,7 +107,7 @@ function local_getNewUpdate() {
             }
             longPoll['ts'] = deJSON['ts'];
             update = deJSON['updates'];
-            console.log(`rmq_client updates: ${update}`);
+            console.log(`rmq_client updates: ${JSON.stringify(update)}`);
             
             rmqChannel.publish(rmqExchange, rmqKey, Buffer.from(update.toString()));
             console.log(`Sent from rmq_client with key - ${rmqKey}`);
