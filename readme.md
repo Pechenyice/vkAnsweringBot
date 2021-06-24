@@ -1,5 +1,5 @@
-<h1>vk bot Anton</h1>
----
-<h2>/data</h2>
---- 
-Стоит обратить внимание на то, что если вы почему-то решили использовать этот код, необходимо добавить в эту папку ваш токен (messagesToken.txt) и ID вашего приложения (appId.txt) 
+# vk bot
+
+## answering machine, prankster, companion and just a good guy, call him Anton
+
+### project needs readme updates, i know, but everything has its time
